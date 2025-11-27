@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <title>Thumbnail Produk Generator</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700&family=Barlow+Condensed:wght@600;700&display=swap" rel="stylesheet">
+
+  <style>
+    * { box-sizing: border-box; font-family: "Montserrat", system-ui, sans-serif; }
+
+    body {
+      margin: 0;
+      background: #0f0f0f;
+      color: #fff;
+      padding: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      min-height: 100vh;
+    }
+
+    .wrapper {
+      position: relative;
+      width: 100%;
+      max-width: 900px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .menu-btn {
+      position: absolute;
+      left: 0;
+      top: 0;
+      background: #1f1f1f;
+      border-radius: 8px;
+      padding: 6px 12px;
+      cursor: pointer;
+      font-size: 26px;
+      border: 1px solid #2e2e2e;
+      user-select: none;
+      z-index: 30;
+    }
+
+    .menu-panel {
+      position: absolute;
+      left: 0;
+      top: 50px;
+      width: 260px;
+      background: #1c1c1c;
+      border-radius: 14px;
+      padding: 16px;
+      display: none;
+      box-shadow: 0 12px 30px rgba(0,0,0,0.6);
+      border: 1px solid #333;
+      z-index: 20;
+      max-height: 80vh;
+      overflow-y: auto;
+    }
+
+    .group {
+      border-radius: 10px;
+      padding: 10px 10px 6px;
+      background: #151515;
+      border: 1px solid #2a2a2a;
+      margin-bottom: 10px;
+    }
+
+    .group-title {
+      font-size: 11px;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      opacity: 0.7;
+      margin-bottom: 6px;
+    }
+
+    .field { margin-bottom: 10px; }
+    .field:last-child { margin-bottom: 4px; }
+
+    .field label {
+      font-size: 11px;
+      opacity: 0.9;
+      display: block;
+      margin-bottom: 4px;
+    }
+
+    .field input[type="text"], 
+    .field input[type="file"] {
+      width: 100%;
+      padding: 7px 10px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      background: #111;
+      color: #e5e7eb;
+      font-size: 12px;
+    }
+
+    .slider-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .slider-container input[type="range"] {
+      flex: 1;
+    }
+
+    .slider-value {
+      width: 45px;
+      text-align: right;
+      opacity: 0.85;
+      font-size: 12px;
+    }
+
+    .sosmed-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px 10px;
+      margin-bottom: 6px;
+    }
+
+    .sosmed-item {
+      font-size: 11px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      opacity: 0.9;
+    }
+
+    .sosmed-item input {
+      margin: 0;
+    }
+
+    .checkbox-inline {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 11px;
+      opacity: 0.9;
+    }
+
+    .download {
+      margin-top: 16px;
+      padding: 10px;
+      border-radius: 999px;
+      background: #ffeb3b;
+      border: none;
+      color: #111;
+      cursor: pointer;
+      font-weight: bold;
+      width: 100%;
+      max-width: 360px;
+      display: block;
+    }
+
+    canvas {
+      background: #000;
+      width: 360px;
+      height: auto;
+      border-radius: 16px;
+      box-shadow: 0 14px 30px rgba(0,0,0,0.65);
+    }
+  </style>
+</head>
+<body>
+
+<div class="wrapper">
+
+  <div class="menu-btn" id="menuBtn">⋮</div>
+
+  <div class="menu-panel" id="menuPanel">
+    <h1 style="font-size:15px;margin-bottom:10px;">PENGATURAN</h1>
+
+    <!-- GROUP FILE -->
+    <div class="group">
+      <div class="group-title">FILE</div>
+      <div class="field">
+        <label>Upload Gambar</label>
+        <input type="file" id="imageInput" accept="image/*">
+      </div>
+    </div>
+
+    <!-- GROUP TEXT -->
+    <div class="group">
+      <div class="group-title">TEXT</div>
+
+      <div class="field">
+        <label>Text Baris 1</label>
+        <input type="text" id="line1" value="JAM TANGAN">
+      </div>
+
+      <div class="field">
+        <label>Ukuran Text 1 (%)</label>
+        <div class="slider-container">
+          <input type="range" id="size1" min="50" max="200" value="100">
+          <span class="slider-value" id="size1val">100%</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Text Baris 2</label>
+        <input type="text" id="line2" value="SANDA 6016">
+      </div>
+
+      <div class="field">
+        <label>Ukuran Text 2 (%)</label>
+        <div class="slider-container">
+          <input type="range" id="size2" min="50" max="200" value="100">
+          <span class="slider-value" id="size2val">100%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- GROUP GRADASI -->
+    <div class="group">
+      <div class="group-title">GRADASI</div>
+
+      <div class="field">
+        <label>Ketinggian Gradasi (%)</label>
+        <div class="slider-container">
+          <input type="range" id="gradHeight" min="0" max="100" value="60">
+          <span class="slider-value" id="gradHeightVal">60%</span>
+        </div>
+      </div>
+
+      <div class="field">
+        <label>Blur Gradasi (%)</label>
+        <div class="slider-container">
+          <input type="range" id="gradBlur" min="0" max="100" value="0">
+          <span class="slider-value" id="gradBlurVal">40%</span>
+        </div>
+      </div>
+
+      <!-- PRESET WARNA GRADASI -->
+      <div class="field">
+        <label>Preset Warna Gradasi (opsional)</label>
+        <div class="sosmed-list">
+          <label class="sosmed-item">
+            <input type="checkbox" id="gradShopee">
+            <span>Shopee</span>
+          </label>
+          <label class="sosmed-item">
+            <input type="checkbox" id="gradTikTok">
+            <span>TikTok</span>
+          </label>
+          <label class="sosmed-item">
+            <input type="checkbox" id="gradInstagram">
+            <span>Instagram</span>
+          </label>
+          <label class="sosmed-item">
+            <input type="checkbox" id="gradYouTube">
+            <span>YouTube</span>
+          </label>
+          <label class="sosmed-item">
+            <input type="checkbox" id="gradFacebook">
+            <span>Facebook</span>
+          </label>
+        </div>
+        <small style="font-size:10px;opacity:0.7;">
+          Jika tidak ada yang dicentang, warna gradasi tetap hitam.
+        </small>
+      </div>
+    </div>
+
+    <!-- GROUP SOSMED -->
+    <div class="group">
+      <div class="group-title">SOSMED</div>
+
+      <div class="sosmed-list">
+        <label class="sosmed-item">
+          <input type="checkbox" id="socShopee" checked>
+          <span>Shopee</span>
+        </label>
+        <label class="sosmed-item">
+          <input type="checkbox" id="socTikTok" checked>
+          <span>TikTok</span>
+        </label>
+        <label class="sosmed-item">
+          <input type="checkbox" id="socYouTube" checked>
+          <span>YouTube</span>
+        </label>
+        <label class="sosmed-item">
+          <input type="checkbox" id="socInstagram" checked>
+          <span>Instagram</span>
+        </label>
+        <label class="sosmed-item">
+          <input type="checkbox" id="socFacebook">
+          <span>Facebook</span>
+        </label>
+      </div>
+
+      <div class="field">
+        <label>Ukuran Icon Sosmed (%)</label>
+        <div class="slider-container">
+          <input type="range" id="socialSize" min="50" max="200" value="100">
+          <span class="slider-value" id="socialSizeVal">100%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- GROUP USERNAME -->
+    <div class="group">
+      <div class="group-title">USERNAME</div>
+
+      <div class="field">
+        <label class="checkbox-inline">
+          <input type="checkbox" id="showUsername" checked>
+          <span>Tampilkan username di canvas</span>
+        </label>
+      </div>
+
+      <div class="field">
+        <label>Username</label>
+        <input type="text" id="handle" value="1minute_setup">
+      </div>
+    </div>
+  </div>
+
+  <!-- CANVAS -->
+  <canvas id="thumbnailCanvas" width="1080" height="1920"></canvas>
+
+  <!-- DOWNLOAD DI BAWAH CANVAS -->
+  <button class="download" id="downloadBtn">Download PNG</button>
+</div>
+
+<script>
+const canvas = document.getElementById('thumbnailCanvas');
+const ctx = canvas.getContext('2d');
+
+const menuBtn = document.getElementById("menuBtn");
+const menuPanel = document.getElementById("menuPanel");
+menuBtn.onclick = () => {
+  menuPanel.style.display = menuPanel.style.display==="block" ? "none":"block";
+};
+
+// Inputs
+const imageInput = document.getElementById('imageInput');
+const line1Input = document.getElementById('line1');
+const line2Input = document.getElementById('line2');
+const handleInput = document.getElementById('handle');
+const downloadBtn = document.getElementById('downloadBtn');
+
+const size1 = document.getElementById('size1');
+const size1val = document.getElementById('size1val');
+const size2 = document.getElementById('size2');
+const size2val = document.getElementById('size2val');
+
+const gradHeight = document.getElementById('gradHeight');
+const gradHeightVal = document.getElementById('gradHeightVal');
+const gradBlur = document.getElementById('gradBlur');
+const gradBlurVal = document.getElementById('gradBlurVal');
+
+// preset gradasi
+const gradShopee    = document.getElementById('gradShopee');
+const gradTikTok    = document.getElementById('gradTikTok');
+const gradInstagram = document.getElementById('gradInstagram');
+const gradYouTube   = document.getElementById('gradYouTube');
+const gradFacebook  = document.getElementById('gradFacebook');
+
+const socShopee = document.getElementById('socShopee');
+const socTikTok = document.getElementById('socTikTok');
+const socYouTube = document.getElementById('socYouTube');
+const socInstagram = document.getElementById('socInstagram');
+const socFacebook = document.getElementById('socFacebook');
+
+const socialSize = document.getElementById('socialSize');
+const socialSizeVal = document.getElementById('socialSizeVal');
+
+const showUsername = document.getElementById('showUsername');
+
+// Gambar utama
+let img = null;
+let imgX = 0, imgY = 0;
+let scale = 1;
+let dragging = false;
+let lastX, lastY;
+
+// Gambar icon sosmed
+const socialOptions = [
+  { idCheckbox: 'socShopee',   key: 'shopee',   path: 'Icons/shopee.png' },
+  { idCheckbox: 'socTikTok',   key: 'tiktok',   path: 'Icons/tiktok.png' },
+  { idCheckbox: 'socYouTube',  key: 'youtube',  path: 'Icons/youtube.png' },
+  { idCheckbox: 'socInstagram',key: 'instagram',path: 'Icons/instagram.png' },
+  { idCheckbox: 'socFacebook', key: 'facebook', path: 'Icons/facebook.png' }
+];
+
+const socialImages = {};
+socialOptions.forEach(opt => {
+  const im = new Image();
+  im.src = opt.path;
+  im.onload = () => draw();
+  socialImages[opt.key] = im;
+});
+
+// *** Image load ***
+imageInput.addEventListener('change', (e)=>{
+  const file = e.target.files[0];
+  if (!file) return;
+
+  img = new Image();
+  img.onload = () => { autoFitImage(); draw(); };
+  img.src = URL.createObjectURL(file);
+});
+
+// Auto fit cover
+function autoFitImage() {
+  const w = canvas.width, h = canvas.height;
+  const rCanvas = w/h, rImg = img.width/img.height;
+
+  scale = (rImg > rCanvas) ? h/img.height : w/img.width;
+  imgX = (w - img.width*scale)/2;
+  imgY = (h - img.height*scale)/2;
+}
+
+// Drag image
+canvas.addEventListener("mousedown", e => {
+  dragging = true;
+  lastX = e.clientX;
+  lastY = e.clientY;
+});
+canvas.addEventListener("mouseup", ()=> dragging=false);
+canvas.addEventListener("mouseleave", ()=> dragging=false);
+canvas.addEventListener("mousemove", e=>{
+  if (!dragging || !img) return;
+  imgX += e.clientX - lastX;
+  imgY += e.clientY - lastY;
+  lastX = e.clientX;
+  lastY = e.clientY;
+  draw();
+});
+
+// Zoom scroll
+canvas.addEventListener("wheel", e=>{
+  if (!img) return;
+  scale -= e.deltaY * 0.0015;
+  if (scale<0.2) scale=0.2;
+  if (scale>6) scale=6;
+  draw();
+});
+
+// Realtime text & sliders
+[line1Input, line2Input, handleInput].forEach(el => el.addEventListener("input", draw));
+
+size1.oninput = ()=>{
+  size1val.textContent = size1.value + "%";
+  draw();
+};
+size2.oninput = ()=>{
+  size2val.textContent = size2.value + "%";
+  draw();
+};
+
+gradHeight.oninput = ()=>{
+  gradHeightVal.textContent = gradHeight.value + "%";
+  draw();
+};
+gradBlur.oninput = ()=>{
+  gradBlurVal.textContent = gradBlur.value + "%";
+  draw();
+};
+
+[socShopee, socTikTok, socYouTube, socInstagram, socFacebook].forEach(el=>{
+  el.addEventListener("change", draw);
+});
+
+socialSize.oninput = ()=>{
+  socialSizeVal.textContent = socialSize.value + "%";
+  draw();
+};
+
+showUsername.addEventListener("change", draw);
+
+// preset gradasi: dibuat seperti radio (hanya satu aktif)
+const gradPresets = [gradShopee, gradTikTok, gradInstagram, gradYouTube, gradFacebook];
+
+gradPresets.forEach(cb => {
+  cb.addEventListener('change', (e) => {
+    if (e.target.checked) {
+      gradPresets.forEach(other => {
+        if (other !== e.target) other.checked = false;
+      });
+    }
+    draw();
+  });
+});
+
+// Download
+downloadBtn.onclick = ()=>{
+  const a=document.createElement("a");
+  a.download="thumbnail.png";
+  a.href=canvas.toDataURL("image/png");
+  a.click();
+};
+
+// helper: ambil warna gradasi berdasarkan preset
+function getGradientColor() {
+  // default hitam
+  let color = { r: 0, g: 0, b: 0 };
+
+  if (gradShopee.checked) {
+    color = { r: 255, g: 87, b: 34 };      // Shopee orange
+  } else if (gradTikTok.checked) {
+    color = { r: 37, g: 244, b: 238 };     // TikTok cyan
+  } else if (gradInstagram.checked) {
+    color = { r: 225, g: 48, b: 108 };     // Instagram pink
+  } else if (gradYouTube.checked) {
+    color = { r: 255, g: 0, b: 0 };        // YouTube red
+  } else if (gradFacebook.checked) {
+    color = { r: 24, g: 119, b: 242 };     // Facebook blue
+  }
+
+  return color;
+}
+
+// DRAW
+function draw() {
+  const w = canvas.width;
+  const h = canvas.height;
+
+  ctx.clearRect(0,0,w,h);
+  ctx.fillStyle = "#000";
+  ctx.fillRect(0,0,w,h);
+
+  // Gambar utama
+  if (img) ctx.drawImage(img, imgX, imgY, img.width*scale, img.height*scale);
+
+  // Gradasi dinamis
+  const heightPercent = gradHeight.value / 100;
+  const blurPercent = gradBlur.value * 2;
+
+  const gradColor = getGradientColor();
+
+  ctx.save();
+  ctx.filter = `blur(${blurPercent}px)`;
+  const grad = ctx.createLinearGradient(0, h*(1-heightPercent), 0, h);
+  grad.addColorStop(0, `rgba(${gradColor.r},${gradColor.g},${gradColor.b},0)`);
+  grad.addColorStop(1, `rgba(${gradColor.r},${gradColor.g},${gradColor.b},1)`);
+  ctx.fillStyle = grad;
+  ctx.fillRect(0, h*(1-heightPercent), w, h*heightPercent);
+  ctx.restore();
+
+  // TEXT produk
+  ctx.textAlign = "center";
+  ctx.shadowColor="rgba(0,0,0,0.7)";
+  ctx.shadowBlur=18;
+
+  const f1 = 90*(size1.value/100);
+  ctx.font = `700 ${f1}px "Barlow Condensed"`;
+  ctx.fillStyle="#fff";
+  ctx.fillText(line1Input.value.toUpperCase(), w/2, h*0.62);
+
+  const f2 = 96*(size2.value/100);
+  ctx.font = `700 ${f2}px "Barlow Condensed"`;
+  ctx.fillStyle="#ffd54a";
+  ctx.fillText(line2Input.value.toUpperCase(), w/2, h*0.69);
+
+  ctx.shadowBlur=0;
+
+  // ICON SOSMED
+  const activeSocial = socialOptions.filter(opt => {
+    const cb = document.getElementById(opt.idCheckbox);
+    return cb && cb.checked && socialImages[opt.key];
+  });
+
+  if (activeSocial.length > 0) {
+    const baseSize = 80; // px di 100%
+    const factor = socialSize.value / 100;
+    const size = baseSize * factor;
+    const gap = size * 0.4;
+    const totalWidth = activeSocial.length * size + (activeSocial.length - 1) * gap;
+    let startX = (w - totalWidth) / 2;
+    const y = h * 0.86; // pos vertikal icon
+
+    activeSocial.forEach(opt => {
+      const iconImg = socialImages[opt.key];
+      if (!iconImg) return;
+      ctx.drawImage(iconImg, startX, y - size/2, size, size);
+      startX += size + gap;
+    });
+  }
+
+  // USERNAME
+  if (showUsername.checked && handleInput.value.trim() !== "") {
+    ctx.font='400 32px "Montserrat"';
+    ctx.fillStyle="rgba(255,255,255,0.9)";
+    ctx.textAlign = "center";
+    ctx.fillText('@'+handleInput.value.trim(), w/2, h*0.94);
+  }
+}
+
+draw();
+</script>
+
+</body>
+</html>
