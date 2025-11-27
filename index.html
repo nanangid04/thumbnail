@@ -154,12 +154,30 @@
       display: block;
     }
 
+    /* CANVAS RESPONSIVE */
     canvas {
       background: #000;
-      width: 360px;
-      height: auto;
+      width: 100%;          /* penuh lebar container */
+      max-width: 360px;     /* tapi maksimal 360px biar mirip HP */
+      height: auto;         /* tinggi ikut rasio */
       border-radius: 16px;
       box-shadow: 0 14px 30px rgba(0,0,0,0.65);
+      display: block;
+    }
+
+    @media (max-width: 480px) {
+      body {
+        padding: 10px;
+      }
+      .wrapper {
+        max-width: 100%;
+      }
+      .menu-panel {
+        left: 10px;
+      }
+      .menu-btn {
+        left: 10px;
+      }
     }
   </style>
 </head>
@@ -228,7 +246,7 @@
         <label>Blur Gradasi (%)</label>
         <div class="slider-container">
           <input type="range" id="gradBlur" min="0" max="100" value="0">
-          <span class="slider-value" id="gradBlurVal">40%</span>
+          <span class="slider-value" id="gradBlurVal">0%</span>
         </div>
       </div>
 
@@ -393,6 +411,16 @@ socialOptions.forEach(opt => {
   socialImages[opt.key] = im;
 });
 
+// --- helper: konversi koordinat mouse -> koordinat canvas (1080x1920) ---
+function getCanvasPos(e) {
+  const rect = canvas.getBoundingClientRect();
+  const scaleX = canvas.width / rect.width;
+  const scaleY = canvas.height / rect.height;
+  const x = (e.clientX - rect.left) * scaleX;
+  const y = (e.clientY - rect.top) * scaleY;
+  return { x, y };
+}
+
 // *** Image load ***
 imageInput.addEventListener('change', (e)=>{
   const file = e.target.files[0];
@@ -415,29 +443,45 @@ function autoFitImage() {
 
 // Drag image
 canvas.addEventListener("mousedown", e => {
+  if (!img) return;
   dragging = true;
-  lastX = e.clientX;
-  lastY = e.clientY;
+  const pos = getCanvasPos(e);
+  lastX = pos.x;
+  lastY = pos.y;
 });
+
 canvas.addEventListener("mouseup", ()=> dragging=false);
 canvas.addEventListener("mouseleave", ()=> dragging=false);
+
 canvas.addEventListener("mousemove", e=>{
   if (!dragging || !img) return;
-  imgX += e.clientX - lastX;
-  imgY += e.clientY - lastY;
-  lastX = e.clientX;
-  lastY = e.clientY;
+  const pos = getCanvasPos(e);
+  const dx = pos.x - lastX;
+  const dy = pos.y - lastY;
+  imgX += dx;
+  imgY += dy;
+  lastX = pos.x;
+  lastY = pos.y;
   draw();
 });
 
-// Zoom scroll
+// Zoom scroll (zoom ke arah kursor)
 canvas.addEventListener("wheel", e=>{
   if (!img) return;
+  e.preventDefault();
+  const pos = getCanvasPos(e);
+  const prevScale = scale;
   scale -= e.deltaY * 0.0015;
   if (scale<0.2) scale=0.2;
   if (scale>6) scale=6;
+
+  const factor = scale / prevScale;
+  // supaya titik di bawah kursor tetap "kurang lebih" sama
+  imgX = pos.x - (pos.x - imgX) * factor;
+  imgY = pos.y - (pos.y - imgY) * factor;
+
   draw();
-});
+}, { passive:false });
 
 // Realtime text & sliders
 [line1Input, line2Input, handleInput].forEach(el => el.addEventListener("input", draw));
@@ -594,4 +638,3 @@ draw();
 
 </body>
 </html>
-
